@@ -1,10 +1,12 @@
 # 🧪 OrangeHRM Quality Engineer Automation Assessment
-### End-to-End Employee Lifecycle Management Test Automation Framework
+### UI, API & Performance Test Automation Framework
 
 ![Java](https://img.shields.io/badge/Java-17%2B-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
 ![Selenium](https://img.shields.io/badge/Selenium_WebDriver-4.20-43B02A?style=for-the-badge&logo=selenium&logoColor=white)
 ![TestNG](https://img.shields.io/badge/TestNG-7.10-FF7F00?style=for-the-badge&logo=testng&logoColor=white)
 ![REST Assured](https://img.shields.io/badge/REST_Assured-5.4-2D8CFF?style=for-the-badge&logo=postman&logoColor=white)
+![JMeter](https://img.shields.io/badge/Apache_JMeter-5.6-D22128?style=for-the-badge&logo=apachejmeter&logoColor=white)
+![k6](https://img.shields.io/badge/Grafana_k6-Performance-7D64FF?style=for-the-badge&logo=k6&logoColor=white)
 ![ExtentReports](https://img.shields.io/badge/ExtentReports-5.1-green?style=for-the-badge)
 
 ---
@@ -12,41 +14,67 @@
 ## 📋 Table of Contents
 1. [Project Overview](#-project-overview)
 2. [End-to-End Test Scenario](#-end-to-end-test-scenario)
-3. [Technology Stack & Dependencies](#-technology-stack--dependencies)
-4. [Framework Architecture & Folder Structure](#-framework-architecture--folder-structure)
-5. [Key Design Patterns & Best Practices](#-key-design-patterns--best-practices)
-6. [Prerequisites](#-prerequisites)
-7. [Setup & Installation](#-setup--installation)
-8. [Executing the Tests](#-executing-the-tests)
-9. [Reporting & Video Recording](#-reporting--video-recording)
-10. [Submission & Git Instructions](#-submission--git-instructions)
+3. [Performance Testing (JMeter & k6)](#-performance-testing-jmeter--k6)
+4. [Technology Stack & Dependencies](#-technology-stack--dependencies)
+5. [Framework Architecture & Folder Structure](#-framework-architecture--folder-structure)
+6. [Key Design Patterns & Best Practices](#-key-design-patterns--best-practices)
+7. [Prerequisites](#-prerequisites)
+8. [Setup & Installation](#-setup--installation)
+9. [Executing the Tests](#-executing-the-tests)
+10. [Reporting & Video Recording](#-reporting--video-recording)
+11. [Submission & Git Instructions](#-submission--git-instructions)
 
 ---
 
 ## 🎯 Project Overview
-This repository contains an enterprise-grade automated testing solution for the **OrangeHRM Open Source** platform (`https://opensource-demo.orangehrmlive.com/`), implementing a comprehensive **Employee Lifecycle Management** workflow.
+This repository contains a comprehensive QA automation framework for the **OrangeHRM Open Source** platform (`https://opensource-demo.orangehrmlive.com/`), covering both **Functional UI/API Lifecycle Automation** and **Performance & Load Testing**.
 
-The framework is constructed using **Java**, **Selenium WebDriver 4**, **TestNG**, **REST Assured**, and **ExtentReports 5**, demonstrating:
-- Strict **Page Object Model (POM)** separation of concerns.
-- **Data-Driven Testing** utilizing external JSON input.
-- File upload automation for employee avatar pictures.
-- Dynamic Vue.js / oxd custom dropdown manipulation and loader spinner synchronization.
-- **Hybrid UI and API validation** with data consistency cross-checks.
-- Automated **video recording** of test execution and interactive **HTML reporting** with embedded failure screenshots.
+The framework combines:
+- **Java 17 + Selenium WebDriver 4 + TestNG**: Strict Page Object Model (POM), data-driven inputs, custom Vue.js dropdown handling, loader synchronization, and session management.
+- **REST Assured**: API authentication via synchronized WebDriver session cookies, data consistency cross-checks, and lifecycle verification.
+- **Apache JMeter & Grafana k6**: Multi-user load testing simulating concurrent employee lifecycle flows, measuring throughput, response times, and error rates against SLAs.
+- **Reporting & Video**: ExtentReports 5 Spark HTML reports, automated screen recordings, and JMeter HTML performance dashboards.
 
 ---
 
 ## 🧩 End-to-End Test Scenario
-The automated test suite executes the complete 6-stage lifecycle:
 
-| Stage | Action | Description & Validations |
+| Stage | Action | Validations |
 |---|---|---|
-| **1. Login** | Authentication | Login with valid credentials (`Admin` / `admin123`) and assert dashboard visibility. |
-| **2. Add Employee** | Data-Driven Creation | Navigate to PIM module, inject details from `employee.json`, upload profile picture, and verify record creation. |
-| **3. Edit Information** | Search & Update | Search by generated Employee ID, update Job Title and Employment Status in Job tab, and assert UI updates. |
-| **4. API Validation** | UI-API Cross-Check | Query REST API (via REST Assured), assert HTTP 200/201 response, and cross-check Name/Job against UI values. |
-| **5. Delete Employee** | Cleanup & Verification | Delete employee from PIM table UI, confirm dialog, verify "No Records Found" in UI, and assert deletion via API (HTTP 204). |
-| **6. Logout** | Session Invalidation | Logout, verify redirect to login page, and verify direct access to protected routes is blocked. |
+| **1. Login** | Authentication | Valid credentials (`Admin` / `admin123`) & verify Dashboard header visibility. |
+| **2. Add Employee** | Data-Driven Creation | Reads from `employee.json`, creates employee with custom/generated ID, uploads avatar photo, and verifies record creation. |
+| **3. Edit Information** | Search & Update | Searches by Employee ID, updates Job Title & Employment Status in Job tab, and verifies changes. |
+| **4. API Validation** | UI-API Cross-Check | Synchronizes browser cookies into REST Assured, performs API operations, and cross-checks UI data vs API data. |
+| **5. Delete Employee** | Cleanup & Verification | Deletes employee from UI, confirms modal, verifies "No Records Found" in UI, and asserts HTTP 204 via API. |
+| **6. Logout** | Session Invalidation | Logs out, verifies redirect to login page, and ensures protected dashboard routes redirect back to login. |
+
+---
+
+## ⚡ Performance Testing (JMeter & k6)
+
+Located in [`performance-tests/`](file:///C:/Users/HP/Desktop/Shankar-%20coding%20test/performance-tests):
+
+### 1. Apache JMeter Test Plan (`orangehrm_performance_test.jmx`)
+A complete, parameterized JMeter test plan measuring:
+- `01_Navigate_To_Login_Page` (GET login HTML, extract CSRF token)
+- `02_Submit_Login_Credentials` (POST credentials, assert 200/302)
+- `03_View_Dashboard` (GET dashboard HTML)
+- `04_Search_PIM_Employee_API` (GET `/web/index.php/api/v2/pim/employees`, assert JSON `$.data`)
+- `05_User_Logout` (GET logout, assert session termination)
+
+#### Run JMeter Non-GUI with HTML Dashboard:
+```bash
+jmeter -n -t performance-tests/orangehrm_performance_test.jmx \
+       -l performance-tests/results.jtl \
+       -e -o performance-tests/html-report/
+```
+
+### 2. Grafana k6 Performance Script (`k6_orangehrm_test.js`)
+Modern JavaScript load test script with automated ramp-up stages and SLA thresholds (`p(95) < 3000ms`, `error rate < 5%`):
+
+```bash
+k6 run performance-tests/k6_orangehrm_test.js
+```
 
 ---
 
@@ -54,172 +82,112 @@ The automated test suite executes the complete 6-stage lifecycle:
 
 | Tool / Dependency | Version | Purpose |
 |---|---|---|
-| **Java Development Kit (JDK)** | 17+ | Core Programming Language |
-| **Selenium WebDriver** | 4.20.0 | Browser automation & W3C interaction |
-| **WebDriverManager** | 5.8.0 | Automated browser driver binary management |
-| **TestNG** | 7.10.0 | Test runner, assertions, and test lifecycle orchestration |
-| **REST Assured** | 5.4.0 | API execution, payload verification, and UI-API cross-check |
-| **ExtentReports** | 5.1.1 | Modern HTML execution reports with step-by-step logs |
-| **Jackson Databind** | 2.17.0 | JSON data deserialization for data-driven testing |
-| **Monte Screen Recorder** | 0.7.7.0 | Automatic test run video recording (.avi) |
-| **Apache Commons IO** | 2.16.1 | File handling and screenshot persistence |
+| **Java Development Kit (JDK)** | 17+ | Core Language |
+| **Selenium WebDriver** | 4.20.0 | Browser automation |
+| **WebDriverManager** | 5.8.0 | Driver binary management |
+| **TestNG** | 7.10.0 | Test runner & assertions |
+| **REST Assured** | 5.4.0 | API validation & cross-checks |
+| **Apache JMeter** | 5.6.3 | Enterprise load & performance testing |
+| **Grafana k6** | Modern | Cloud-native performance scripting |
+| **ExtentReports** | 5.1.1 | Interactive HTML test reports |
+| **Jackson Databind** | 2.17.0 | JSON data-driven testing |
+| **Monte Screen Recorder** | 0.7.7.0 | Native execution video recording |
 
 ---
 
 ## 📂 Framework Architecture & Folder Structure
 
 ```
-INTERVIEW/
-├── pom.xml                                           # Maven dependencies & build plugins
-├── testng.xml                                        # TestNG test suite configuration
-├── README.md                                         # Project documentation & execution guide
+Shankar- coding test/
+├── pom.xml                                           # Maven dependencies & build configuration
+├── testng.xml                                        # TestNG test runner suite XML
+├── README.md                                         # Main documentation
+├── performance-tests/                                # Performance testing suite
+│   ├── orangehrm_performance_test.jmx                # Apache JMeter test plan
+│   ├── k6_orangehrm_test.js                          # Grafana k6 performance script
+│   └── README.md                                     # Dedicated performance test guide
 ├── src/
 │   ├── main/
 │   │   ├── java/com/orangehrm/
 │   │   │   ├── base/
-│   │   │   │   ├── DriverFactory.java                # Thread-safe WebDriver initialization
-│   │   │   │   └── BasePage.java                     # Reusable explicit waits & Vue/oxd helpers
+│   │   │   │   ├── DriverFactory.java                # ThreadSafe WebDriver initialization
+│   │   │   │   └── BasePage.java                     # Explicit waits & Vue/oxd helpers
 │   │   │   ├── pages/
-│   │   │   │   ├── LoginPage.java                    # Login page actions & locators
+│   │   │   │   ├── LoginPage.java                    # Login page locators & actions
 │   │   │   │   ├── DashboardPage.java                # Dashboard navigation & logout
-│   │   │   │   ├── PIMPage.java                      # Employee search, table, & delete modal
+│   │   │   │   ├── PIMPage.java                      # Employee search, table, & delete
 │   │   │   │   ├── AddEmployeePage.java              # Employee creation & file upload
-│   │   │   │   └── EmployeeDetailsPage.java          # Job details and personal details edit
+│   │   │   │   └── EmployeeDetailsPage.java          # Job and Personal details edit
 │   │   │   ├── api/
-│   │   │   │   └── EmployeeApiClient.java            # REST Assured API client & cross-validation
+│   │   │   │   └── EmployeeApiClient.java            # REST Assured client & cross-validation
 │   │   │   ├── utils/
-│   │   │   │   ├── ConfigReader.java                 # Configuration properties reader
-│   │   │   │   ├── JsonDataReader.java               # Jackson JSON test data parser
-│   │   │   │   ├── ScreenshotUtil.java               # Failure and step screenshot capture
-│   │   │   │   ├── VideoRecorderUtil.java            # Monte Media screen recorder
-│   │   │   │   └── ImageGeneratorUtil.java           # Generates test avatar if not present
+│   │   │   │   ├── ConfigReader.java                 # Configuration reader
+│   │   │   │   ├── JsonDataReader.java               # Jackson JSON test data reader
+│   │   │   │   ├── ScreenshotUtil.java               # Screenshot capture (Base64/File)
+│   │   │   │   ├── VideoRecorderUtil.java            # Monte Media video recorder
+│   │   │   │   └── ImageGeneratorUtil.java           # Auto-generates test avatar
 │   │   │   └── listeners/
-│   │   │       ├── ExtentManager.java                # ExtentReports 5 spark configuration
-│   │   │       └── TestListener.java                 # TestNG listener for logging & reporting
+│   │   │       ├── ExtentManager.java                # ExtentReports 5 configuration
+│   │   │       └── TestListener.java                 # TestNG lifecycle & report hooks
 │   │   └── resources/
-│   │       ├── config.properties                     # Global configurations (URLs, timeouts)
+│   │       ├── config.properties                     # Environment configurations
 │   │       └── testdata/
-│   │           ├── employee.json                     # Data-driven employee input payload
-│   │           └── avatar.png                        # Profile avatar for upload
+│   │           ├── employee.json                     # Data-driven employee input
+│   │           └── avatar.png                        # Avatar image asset
 │   └── test/
 │       └── java/com/orangehrm/tests/
-│           ├── BaseTest.java                         # Test setup/teardown & video hooks
-│           └── EmployeeLifecycleTest.java            # Master E2E 6-step lifecycle test
+│           ├── BaseTest.java                         # Driver setup, teardown & video hooks
+│           └── EmployeeLifecycleTest.java            # Complete 6-step E2E lifecycle test
 └── test-output/
-    ├── ExtentReport.html                             # Generated HTML Test Execution Report
-    ├── screenshots/                                  # Captured failure/milestone screenshots
-    └── test-recordings/                              # Captured execution video files
+    ├── ExtentReport.html                             # Interactive HTML execution report
+    ├── screenshots/                                  # Captured failure screenshots
+    └── test-recordings/                              # Captured video recordings (.avi)
 ```
-
----
-
-## 💡 Key Design Patterns & Best Practices
-
-1. **Page Object Model (POM)**:
-   - Each web page has a dedicated class encapsulating its locators and user interactions.
-   - Tests remain clean, readable, and decoupled from HTML/DOM selectors.
-
-2. **ThreadSafe Driver Architecture**:
-   - `DriverFactory` utilizes `ThreadLocal<WebDriver>` to support parallel test execution without browser collision.
-
-3. **Robust Handling of Dynamic Vue.js Elements**:
-   - Explicit waits handle `.oxd-loading-spinner` transitions to prevent race conditions.
-   - Custom method `selectCustomDropdown` accurately clicks and selects options from non-standard `oxd-select-wrapper` custom dropdowns.
-   - Clears text inputs using keyboard chords (`Ctrl+A`, `Backspace`) to ensure Vue two-way data bindings (`v-model`) react properly.
-
-4. **Hybrid UI + API Testing**:
-   - Selenium browser cookies are synchronized into REST Assured for authenticated API calls.
-   - End-to-end data consistency is validated between UI rendering and API payload responses.
-
----
-
-## 💻 Prerequisites
-
-Ensure the following are installed on your machine:
-- **Java JDK 17** or higher (`java -version`)
-- **Apache Maven 3.8+** (`mvn -version`)
-- **Google Chrome** (or Firefox / Edge)
-
----
-
-## 🚀 Setup & Installation
-
-1. **Clone the repository**:
-   ```bash
-   git clone <YOUR_REPO_URL>
-   cd INTERVIEW
-   ```
-
-2. **Install project dependencies**:
-   ```bash
-   mvn clean install -DskipTests
-   ```
 
 ---
 
 ## 🏃 Executing the Tests
 
-### Option 1: Run via Maven CLI (Default Chrome)
+### Functional UI & API Automation:
 ```bash
+# Run full suite via Maven
 mvn clean test
-```
 
-### Option 2: Run with Headless Mode
-```bash
+# Run in headless mode
 mvn clean test -Dheadless=true
-```
 
-### Option 3: Run on Specific Browser (Firefox / Edge / Chrome)
-```bash
+# Cross-browser execution
 mvn clean test -Dbrowser=firefox
 mvn clean test -Dbrowser=edge
 ```
 
-### Option 4: Run via TestNG XML directly
-Right-click `testng.xml` in your IDE (IntelliJ IDEA / Eclipse) and select **Run 'testng.xml'**.
+### Performance Load Testing:
+```bash
+# JMeter (Non-GUI with HTML dashboard)
+jmeter -n -t performance-tests/orangehrm_performance_test.jmx -l performance-tests/results.jtl -e -o performance-tests/html-report/
+
+# k6
+k6 run performance-tests/k6_orangehrm_test.js
+```
 
 ---
 
-## 📊 Reporting & Video Recording
+## 📊 Reports & Artifacts
 
-### 1. Interactive ExtentReports HTML Report
-Upon test execution, open the generated HTML report:
-```
-test-output/ExtentReport.html
-```
-- Includes detailed step-by-step logs, execution times, status badges, environment info, and embedded Base64 screenshots on failure.
-
-### 2. Test Execution Video Recording
-Screen recordings of the execution are automatically generated under:
-```
-test-recordings/testEmployeeLifecycleManagement_<timestamp>.avi
-```
-*(You can play the video using VLC Media Player or Windows Media Player).*
+- **Functional HTML Report**: `test-output/ExtentReport.html`
+- **Execution Video**: `test-recordings/testEmployeeLifecycleManagement_<timestamp>.avi`
+- **JMeter HTML Dashboard**: `performance-tests/html-report/index.html`
 
 ---
 
 ## 📦 Submission & Git Instructions
 
-To upload your solution to GitHub and submit:
-
 ```bash
-# 1. Initialize git repository (if not already done)
 git init
-
-# 2. Add all files
 git add .
-
-# 3. Commit changes
-git commit -m "feat: complete OrangeHRM employee lifecycle E2E automation framework"
-
-# 4. Set main branch and remote URL
+git commit -m "feat: complete OrangeHRM UI, API, and Performance testing framework"
 git branch -M main
 git remote add origin https://github.com/<YOUR_GITHUB_USERNAME>/orangehrm-automation-assessment.git
-
-# 5. Push to GitHub
 git push -u origin main
 ```
-
-### 📅 Deliverable & Recipient
-Share the repository link (or invite as collaborator) to:
-- **`shweta.george@reflectionsinfos.com`**
+*Share repository access with: **`shweta.george@reflectionsinfos.com`**.*
